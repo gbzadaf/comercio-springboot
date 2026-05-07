@@ -10,8 +10,6 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "compras")
-@Getter
-@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -42,5 +40,49 @@ public class Compra {
         PENDENTE,
         PAGA,
         CANCELADA
+    }
+
+    public UUID getId() {
+        return id;
+    }
+
+    public Fornecedor getFornecedor() {
+        return fornecedor;
+    }
+
+    public void setFornecedor(Fornecedor fornecedor) {
+        this.fornecedor = fornecedor;
+    }
+
+    public LocalDateTime getDataCompra() {
+        return dataCompra;
+    }
+
+    public void setDataCompra(LocalDateTime dataCompra) {
+        this.dataCompra = dataCompra;
+    }
+
+    public BigDecimal getTotal() {
+        return total;
+    }
+
+    public void setTotal(BigDecimal total) {
+        this.total = total;
+    }
+
+    public Status getStatus() {
+        return status;
+    }
+
+    public void setStatus(Status status) {
+        this.status = status;
+    }
+
+    public List<ItemCompra> getItens() {
+        return itens;
+    }
+
+    public void setItens(List<ItemCompra> itens) {
+        this.itens = itens;
     }
 }

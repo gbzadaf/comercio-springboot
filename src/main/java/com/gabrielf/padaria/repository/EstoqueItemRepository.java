@@ -9,6 +9,6 @@ import java.util.UUID;
 
 public interface EstoqueItemRepository extends JpaRepository<EstoqueItem, UUID> {
 
-    Optional<EstoqueItem> findByProduto(Produto produto);
+    Optional<EstoqueItem> findByProdutoId(UUID produtoId);
 
 }

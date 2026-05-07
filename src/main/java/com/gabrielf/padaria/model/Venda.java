@@ -10,8 +10,6 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "vendas")
-@Getter
-@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -44,5 +42,49 @@ public class Venda {
         PIX,
         CARTAO_CREDITO,
         CATAO_DEBITO
+    }
+
+    public UUID getId() {
+        return id;
+    }
+
+    public LocalDateTime getDataVenda() {
+        return dataVenda;
+    }
+
+    public void setDataVenda(LocalDateTime dataVenda) {
+        this.dataVenda = dataVenda;
+    }
+
+    public BigDecimal getTotal() {
+        return total;
+    }
+
+    public void setTotal(BigDecimal total) {
+        this.total = total;
+    }
+
+    public FormaPagamento getFormaPagamento() {
+        return formaPagamento;
+    }
+
+    public void setFormaPagamento(FormaPagamento formaPagamento) {
+        this.formaPagamento = formaPagamento;
+    }
+
+    public CaixaDiario getCaixaDiario() {
+        return caixaDiario;
+    }
+
+    public void setCaixaDiario(CaixaDiario caixaDiario) {
+        this.caixaDiario = caixaDiario;
+    }
+
+    public List<ItemVenda> getItens() {
+        return itens;
+    }
+
+    public void setItens(List<ItemVenda> itens) {
+        this.itens = itens;
     }
 }

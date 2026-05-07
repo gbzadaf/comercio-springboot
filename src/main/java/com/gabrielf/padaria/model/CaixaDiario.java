@@ -10,8 +10,6 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "caixa_diario")
-@Getter
-@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -40,9 +38,61 @@ public class CaixaDiario {
     @OneToMany(mappedBy = "caixaDiario")
     private List<Venda> vendas;
 
+
     public enum Status {
         ABERTO,
         FECHADO
     }
 
+    public UUID getId() {
+        return id;
+    }
+
+    public LocalDate getData() {
+        return data;
+    }
+
+    public void setData(LocalDate data) {
+        this.data = data;
+    }
+
+    public BigDecimal getTotalVendas() {
+        return totalVendas;
+    }
+
+    public void setTotalVendas(BigDecimal totalVendas) {
+        this.totalVendas = totalVendas;
+    }
+
+    public BigDecimal getTotalDespesas() {
+        return totalDespesas;
+    }
+
+    public void setTotalDespesas(BigDecimal totalDespesas) {
+        this.totalDespesas = totalDespesas;
+    }
+
+    public BigDecimal getSaldo() {
+        return saldo;
+    }
+
+    public void setSaldo(BigDecimal saldo) {
+        this.saldo = saldo;
+    }
+
+    public Status getStatus() {
+        return status;
+    }
+
+    public void setStatus(Status status) {
+        this.status = status;
+    }
+
+    public List<Venda> getVendas() {
+        return vendas;
+    }
+
+    public void setVendas(List<Venda> vendas) {
+        this.vendas = vendas;
+    }
 }

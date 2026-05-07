@@ -8,8 +8,6 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "itens_compras")
-@Getter
-@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -33,4 +31,39 @@ public class ItemCompra {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal precoPago;
 
+    public UUID getId() {
+        return id;
+    }
+    
+    public Compra getCompra() {
+        return compra;
+    }
+
+    public void setCompra(Compra compra) {
+        this.compra = compra;
+    }
+
+    public Produto getProduto() {
+        return produto;
+    }
+
+    public void setProduto(Produto produto) {
+        this.produto = produto;
+    }
+
+    public BigDecimal getQuantidade() {
+        return quantidade;
+    }
+
+    public void setQuantidade(BigDecimal quantidade) {
+        this.quantidade = quantidade;
+    }
+
+    public BigDecimal getPrecoPago() {
+        return precoPago;
+    }
+
+    public void setPrecoPago(BigDecimal precoPago) {
+        this.precoPago = precoPago;
+    }
 }

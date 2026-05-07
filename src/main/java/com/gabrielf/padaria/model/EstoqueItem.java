@@ -8,8 +8,6 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "estoque_itens")
-@Getter
-@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -28,4 +26,33 @@ public class EstoqueItem {
 
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal quantidadeMinima;
+
+
+    public UUID getId() {
+        return id;
+    }
+
+    public Produto getProduto() {
+        return produto;
+    }
+
+    public void setProduto(Produto produto) {
+        this.produto = produto;
+    }
+
+    public BigDecimal getQuantidade() {
+        return quantidade;
+    }
+
+    public void setQuantidade(BigDecimal quantidade) {
+        this.quantidade = quantidade;
+    }
+
+    public BigDecimal getQuantidadeMinima() {
+        return quantidadeMinima;
+    }
+
+    public void setQuantidadeMinima(BigDecimal quantidadeMinima) {
+        this.quantidadeMinima = quantidadeMinima;
+    }
 }
