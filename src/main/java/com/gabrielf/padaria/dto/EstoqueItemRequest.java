@@ -1,0 +1,19 @@
+package com.gabrielf.padaria.dto;
+
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+
+import java.math.BigDecimal;
+import java.util.UUID;
+
+public record EstoqueItemRequest (
+        @NotNull(message = "Produto é obrigatório")
+        UUID id,
+
+        @NotNull @Positive(message = "Quantidade deve ser positiva")
+        BigDecimal quantidade,
+
+        @NotNull @Positive(message = "Quantidade mínima deve ser positiva")
+        BigDecimal quantidadeMinima
+) {}
+
