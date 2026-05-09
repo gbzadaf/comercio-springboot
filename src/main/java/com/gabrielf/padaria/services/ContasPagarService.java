@@ -1,7 +1,10 @@
 package com.gabrielf.padaria.services;
 
+import com.gabrielf.padaria.dto.ContasPagarRequest;
+import com.gabrielf.padaria.dto.ContasPagarResponse;
 import com.gabrielf.padaria.model.CaixaDiario;
 import com.gabrielf.padaria.model.ContasPagar;
+import com.gabrielf.padaria.model.Fornecedor;
 import com.gabrielf.padaria.repository.ContasPagarRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,53 +18,77 @@ import java.util.UUID;
 public class ContasPagarService {
 
     private final ContasPagarRepository contasPagarRepository;
+    private final FornecedorService fornecedorService;
     private final CaixaDiarioService caixaDiarioService;
 
-    public ContasPagarService(ContasPagarRepository contasPagarRepository, CaixaDiarioService caixaDiarioService) {
+    public ContasPagarService(ContasPagarRepository contasPagarRepository, FornecedorService fornecedorService,
+                              CaixaDiarioService caixaDiarioService) {
         this.contasPagarRepository = contasPagarRepository;
+        this.fornecedorService = fornecedorService;
         this.caixaDiarioService = caixaDiarioService;
     }
 
-    public ContasPagar create(ContasPagar contaPagar) {
-        contaPagar.setStatus(ContasPagar.Status.PENDENTE);
-        return contasPagarRepository.save(contaPagar);
+    public ContasPagarResponse create(ContasPagarRequest request) {
+        ContasPagar conta = new ContasPagar();
+        conta.setDescricao(request.descricao());
+        conta.setValor(request.valor());
+        conta.setVencimento(request.vencimento());
+        conta.setCategoria(request.categoria());
+        conta.setStatus(ContasPagar.Status.PENDENTE);
+
+        if (request.fornecedorId() != null) {
+            Fornecedor fornecedor = fornecedorService.buscarOuFalhar(request.fornecedorId());
+            conta.setFornecedor(fornecedor);
+        }
+
+        return ContasPagarResponse.from(contasPagarRepository.save(conta));
     }
 
-    public List<ContasPagar> findAll() {
-        return contasPagarRepository.findAll();
+    public List<ContasPagarResponse> findAll() {
+        return contasPagarRepository.findAll()
+                .stream()
+                .map(ContasPagarResponse::from)
+                .toList();
     }
 
-    public ContasPagar findById(UUID id) {
-        return contasPagarRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Conta não encontrada"));
+    public ContasPagarResponse findById(UUID id) {
+        return ContasPagarResponse.from(buscarOuFalhar(id));
     }
 
-    public List<ContasPagar> findByStatus(ContasPagar.Status status) {
-        return contasPagarRepository.findByStatus(status);
+    public List<ContasPagarResponse> findByStatus(ContasPagar.Status status) {
+        return contasPagarRepository.findByStatus(status)
+                .stream()
+                .map(ContasPagarResponse::from)
+                .toList();
     }
 
     @Transactional
-    public ContasPagar pagar(UUID id) {
-        ContasPagar conta = findById(id);
+    public ContasPagarResponse pagar(UUID id) {
+        ContasPagar conta = buscarOuFalhar(id);
         conta.setStatus(ContasPagar.Status.PAGA);
         conta.setDataPagamento(LocalDateTime.now());
 
         CaixaDiario caixa = caixaDiarioService.findOrCreateByData(LocalDate.now());
         caixaDiarioService.adicionarDespesa(caixa.getId(), conta.getValor());
 
-        return contasPagarRepository.save(conta);
+        return ContasPagarResponse.from(contasPagarRepository.save(conta));
     }
 
     @Transactional
-    public ContasPagar cancelar(UUID id) {
-        ContasPagar conta = findById(id);
+    public ContasPagarResponse cancelar(UUID id) {
+        ContasPagar conta = buscarOuFalhar(id);
         conta.setStatus(ContasPagar.Status.CANCELADA);
-        return contasPagarRepository.save(conta);
+        return ContasPagarResponse.from(contasPagarRepository.save(conta));
     }
 
     public void delete(UUID id) {
-        findById(id);
+        buscarOuFalhar(id);
         contasPagarRepository.deleteById(id);
+    }
+
+    private ContasPagar buscarOuFalhar(UUID id) {
+        return contasPagarRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Conta não encontrada"));
     }
 
 }

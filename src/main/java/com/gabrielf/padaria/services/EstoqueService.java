@@ -1,9 +1,10 @@
 package com.gabrielf.padaria.services;
 
+import com.gabrielf.padaria.dto.EstoqueItemRequest;
+import com.gabrielf.padaria.dto.EstoqueItemResponse;
 import com.gabrielf.padaria.model.EstoqueItem;
 import com.gabrielf.padaria.model.Produto;
 import com.gabrielf.padaria.repository.EstoqueItemRepository;
-import com.gabrielf.padaria.repository.ProdutoRepository;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -14,67 +15,64 @@ import java.util.UUID;
 public class EstoqueService {
 
     private final EstoqueItemRepository estoqueItemRepository;
+    private final ProdutoService produtoService;
 
-
-    public EstoqueService(EstoqueItemRepository estoqueItemRepository) {
+    public EstoqueService(EstoqueItemRepository estoqueItemRepository, ProdutoService produtoService) {
         this.estoqueItemRepository = estoqueItemRepository;
+        this.produtoService = produtoService;
 
     }
 
-    public EstoqueItem create(EstoqueItem estoqueItem) {
-
-        return estoqueItemRepository.save(estoqueItem);
+    public EstoqueItemResponse create(EstoqueItemRequest request) {
+        Produto produto = produtoService.buscarOuFalhar(request.produtoId());
+        EstoqueItem item = new EstoqueItem();
+        item.setProduto(produto);
+        item.setQuantidade(request.quantidade());
+        item.setQuantidadeMinima(request.quantidadeMinima());
+        return EstoqueItemResponse.from(estoqueItemRepository.save(item));
     }
 
-    public List<EstoqueItem> findAll() {
-
-        return estoqueItemRepository.findAll();
+    public List<EstoqueItemResponse> findAll() {
+        return estoqueItemRepository.findAll()
+                .stream()
+                .map(EstoqueItemResponse::from)
+                .toList();
     }
 
-    public EstoqueItem findById(UUID id) {
-
-        return estoqueItemRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Item de estoque não encontrado"));
+    public EstoqueItemResponse findById(UUID id) {
+        return EstoqueItemResponse.from(buscarOuFalhar(id));
     }
 
-    public EstoqueItem findByProduto(UUID produtoId) {
-
-        return estoqueItemRepository.findByProdutoId(produtoId)
-                .orElseThrow(() -> new RuntimeException("Estoque não encontrado para esse produto"));
-
+    public EstoqueItemResponse update(UUID id, EstoqueItemRequest request) {
+        EstoqueItem existing = buscarOuFalhar(id);
+        existing.setQuantidade(request.quantidade());
+        existing.setQuantidadeMinima(request.quantidadeMinima());
+        return EstoqueItemResponse.from(estoqueItemRepository.save(existing));
     }
 
-    public void aumentarQuantidade(UUID produtoID, BigDecimal quantidade) {
-
-        EstoqueItem item = findByProduto(produtoID);
+    public void aumentarQuantidade(UUID produtoId, BigDecimal quantidade) {
+        EstoqueItem item = buscarOuFalharPorProduto(produtoId);
         item.setQuantidade(item.getQuantidade().add(quantidade));
         estoqueItemRepository.save(item);
     }
 
     public void diminuirQuantidade(UUID produtoId, BigDecimal quantidade) {
-
-        EstoqueItem item = findByProduto(produtoId);
+        EstoqueItem item = buscarOuFalharPorProduto(produtoId);
         if (item.getQuantidade().compareTo(quantidade) < 0) {
             throw new RuntimeException("Estoque insuficiente para o produto: " + item.getProduto().getNome());
         }
-
         item.setQuantidade(item.getQuantidade().subtract(quantidade));
         estoqueItemRepository.save(item);
     }
 
-    public boolean isEstoqueAbaixoDoMinimo(UUID produtoId) {
-
-        EstoqueItem item = findByProduto(produtoId);
-        return item.getQuantidade().compareTo(item.getQuantidadeMinima()) < 0;
-
+    private EstoqueItem buscarOuFalhar(UUID id) {
+        return estoqueItemRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Item de estoque não encontrado"));
     }
 
-    public EstoqueItem update(UUID id, EstoqueItem estoqueItem) {
-        EstoqueItem existing = findById(id);
-        existing.setQuantidade(estoqueItem.getQuantidade());
-        existing.setQuantidadeMinima(estoqueItem.getQuantidadeMinima());
-
-        return estoqueItemRepository.save(existing);
+    private EstoqueItem buscarOuFalharPorProduto(UUID produtoId) {
+        return estoqueItemRepository.findByProdutoId(produtoId)
+                .orElseThrow(() -> new RuntimeException("Estoque não encontrado para esse produto"));
     }
 
 }

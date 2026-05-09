@@ -1,7 +1,10 @@
 package com.gabrielf.padaria.services;
 
+import com.gabrielf.padaria.dto.VendaRequest;
+import com.gabrielf.padaria.dto.VendaResponse;
 import com.gabrielf.padaria.model.CaixaDiario;
 import com.gabrielf.padaria.model.ItemVenda;
+import com.gabrielf.padaria.model.Produto;
 import com.gabrielf.padaria.model.Venda;
 import com.gabrielf.padaria.repository.VendaRepository;
 import org.springframework.stereotype.Service;
@@ -17,51 +20,71 @@ import java.util.UUID;
 public class VendaService {
 
     private final VendaRepository vendaRepository;
+    private final ProdutoService produtoService;
     private final EstoqueService estoqueService;
     private final CaixaDiarioService caixaDiarioService;
 
-    public VendaService(VendaRepository vendaRepository, EstoqueService estoqueService,
+    public VendaService(VendaRepository vendaRepository, ProdutoService produtoService, EstoqueService estoqueService,
                         CaixaDiarioService caixaDiarioService) {
         this.vendaRepository = vendaRepository;
+        this.produtoService = produtoService;
         this.estoqueService = estoqueService;
         this.caixaDiarioService = caixaDiarioService;
     }
 
-    @Transactional
-    public Venda create(Venda venda) {
+    public VendaResponse create(VendaRequest request) {
         CaixaDiario caixa = caixaDiarioService.findOrCreateByData(LocalDate.now());
 
+        Venda venda = new Venda();
         venda.setDataVenda(LocalDateTime.now());
+        venda.setFormaPagamento(request.formaPagamento());
         venda.setCaixaDiario(caixa);
-        venda.getItens().forEach(item -> item.setSubtotal(
-                item.getPrecoUnitario().multiply(item.getQuantidade())
-        ));
-        venda.setTotal(calcularTotal(venda.getItens()));
+
+        List<ItemVenda> itens = request.itens().stream().map(itemRequest -> {
+            Produto produto = produtoService.buscarOuFalhar(itemRequest.produtoId());
+            ItemVenda item = new ItemVenda();
+            item.setVenda(venda);
+            item.setProduto(produto);
+            item.setQuantidade(itemRequest.quantidade());
+            item.setPrecoUnitario(itemRequest.precoUnitario());
+            item.setSubtotal(itemRequest.precoUnitario().multiply(itemRequest.quantidade()));
+            return item;
+        }).toList();
+
+        venda.setItens(itens);
+        venda.setTotal(calcularTotal(itens));
 
         Venda saved = vendaRepository.save(venda);
 
-        saved.getItens().forEach(item ->
+        itens.forEach(item ->
                 estoqueService.diminuirQuantidade(item.getProduto().getId(), item.getQuantidade())
         );
 
         caixaDiarioService.adicionarVenda(caixa.getId(), saved.getTotal());
 
-        return saved;
+        return VendaResponse.from(saved);
     }
 
-    public List<Venda> findAll() {
-        return vendaRepository.findAll();
+    public List<VendaResponse> findAll() {
+        return vendaRepository.findAll()
+                .stream()
+                .map(VendaResponse::from)
+                .toList();
     }
 
-    public Venda findById(UUID id) {
-        return vendaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Venda não encontrada"));
+    public VendaResponse findById(UUID id) {
+        return VendaResponse.from(buscarOuFalhar(id));
     }
 
     private BigDecimal calcularTotal(List<ItemVenda> itens) {
         return itens.stream()
                 .map(ItemVenda::getSubtotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    private Venda buscarOuFalhar(UUID id) {
+        return vendaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Venda não encontrada"));
     }
 
 }

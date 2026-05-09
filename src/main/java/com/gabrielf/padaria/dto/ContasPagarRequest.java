@@ -13,7 +13,7 @@ public record ContasPagarRequest(
         @NotBlank(message = "Descrição é obrigatória")
         String descricao,
 
-        UUID fornecedorID,
+        UUID fornecedorId,
 
         @NotNull(message = "Valor é obrigatório")
         BigDecimal valor,

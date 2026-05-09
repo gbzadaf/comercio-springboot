@@ -8,7 +8,7 @@ import java.util.UUID;
 
 public record EstoqueItemRequest (
         @NotNull(message = "Produto é obrigatório")
-        UUID id,
+        UUID produtoId,
 
         @NotNull @Positive(message = "Quantidade deve ser positiva")
         BigDecimal quantidade,

@@ -1,5 +1,6 @@
 package com.gabrielf.padaria.services;
 
+import com.gabrielf.padaria.dto.CaixaDiarioResponse;
 import com.gabrielf.padaria.model.CaixaDiario;
 import com.gabrielf.padaria.repository.CaixaDiarioRepository;
 import org.springframework.stereotype.Service;
@@ -33,18 +34,20 @@ public class CaixaDiarioService {
                 });
     }
 
-    public List<CaixaDiario> findAll() {
-        return caixaDiarioRepository.findAll();
+    public List<CaixaDiarioResponse> findAll() {
+        return caixaDiarioRepository.findAll()
+                .stream()
+                .map(CaixaDiarioResponse::from)
+                .toList();
     }
 
-    public CaixaDiario findById(UUID id) {
-        return caixaDiarioRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Caixa diário não encontrado"));
+    public CaixaDiarioResponse findById(UUID id) {
+        return CaixaDiarioResponse.from(buscarOuFalhar(id));
     }
 
     @Transactional
     public void adicionarVenda(UUID id, BigDecimal valor) {
-        CaixaDiario caixa = findById(id);
+        CaixaDiario caixa = buscarOuFalhar(id);
         caixa.setTotalVendas(caixa.getTotalVendas().add(valor));
         caixa.setSaldo(caixa.getTotalVendas().subtract(caixa.getTotalDespesas()));
         caixaDiarioRepository.save(caixa);
@@ -52,17 +55,22 @@ public class CaixaDiarioService {
 
     @Transactional
     public void adicionarDespesa(UUID id, BigDecimal valor) {
-        CaixaDiario caixa = findById(id);
+        CaixaDiario caixa = buscarOuFalhar(id);
         caixa.setTotalDespesas(caixa.getTotalDespesas().add(valor));
         caixa.setSaldo(caixa.getTotalVendas().subtract(caixa.getTotalDespesas()));
         caixaDiarioRepository.save(caixa);
     }
 
     @Transactional
-    public CaixaDiario fechar(UUID id) {
-        CaixaDiario caixa = findById(id);
+    public CaixaDiarioResponse fechar(UUID id) {
+        CaixaDiario caixa = buscarOuFalhar(id);
         caixa.setStatus(CaixaDiario.Status.FECHADO);
-        return caixaDiarioRepository.save(caixa);
+        return CaixaDiarioResponse.from(caixaDiarioRepository.save(caixa));
+    }
+
+    private CaixaDiario buscarOuFalhar(UUID id) {
+        return caixaDiarioRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Caixa diário não encontrado"));
     }
 
 
