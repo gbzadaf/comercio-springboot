@@ -28,18 +28,17 @@ public class ContasPagarController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ContasPagarResponse>> findAll() {
+    public ResponseEntity<List<ContasPagarResponse>> findAll(
+            @RequestParam(required = false) ContasPagar.Status status) {
+        if (status != null) {
+            return ResponseEntity.ok(contasPagarService.findByStatus(status));
+        }
         return ResponseEntity.ok(contasPagarService.findAll());
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<ContasPagarResponse> findById(@PathVariable UUID id) {
         return ResponseEntity.ok(contasPagarService.findById(id));
-    }
-
-    @GetMapping("/status/{status}")
-    public ResponseEntity<List<ContasPagarResponse>> findByStatus(@PathVariable ContasPagar.Status status) {
-        return ResponseEntity.ok(contasPagarService.findByStatus(status));
     }
 
     @PatchMapping("/{id}/pagar")
@@ -57,4 +56,5 @@ public class ContasPagarController {
         contasPagarService.delete(id);
         return ResponseEntity.noContent().build();
     }
+
 }
