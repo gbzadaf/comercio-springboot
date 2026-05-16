@@ -153,11 +153,15 @@ CREATE DATABASE padaria;
 
 3. Configure o `application.properties`:
 ```properties
-spring.datasource.url=jdbc:postgresql://localhost:5432/padaria
-spring.datasource.username=seu_usuario
-spring.datasource.password=sua_senha
-jwt.secret=sua_chave_secreta
-jwt.expiration=86400000
+spring.datasource.url=${DATABASE_URL}
+spring.datasource.username=${DATABASE_USERNAME}
+spring.datasource.password=${DATABASE_PASSWORD}
+
+jwt.secret=${JWT_SECRET}
+jwt.expiration=${JWT_EXPIRATION:86400000}
+
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
 ```
 
 4. Execute o projeto:
